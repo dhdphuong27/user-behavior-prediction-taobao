@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Data Processor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>🗃️ CSV Data Processor</h1>
+            <div class="input-section">
+                <div class="server-url-section">
+                    <span class="small-label">Server URL</span>
+                    <input type="text" id="serverUrl" class="server-url-input" placeholder="e.g., http://localhost:5000"
+                        value="http://localhost:5000">
+                </div>
+                <div class="upload-section">
+                    <span class="small-label">Dataset</span>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="csvFile" class="file-input" accept=".csv">
+                        <div class="file-input-button">
+                            <div class="upload-icon">📁</div>
+                            <div class="file-name" id="fileName">No file selected</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="processButton" class="process-button" disabled>Process File</button>
+            </div>
+        </div>
+        <div class="content-wrapper">
+            <div class="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="tab-button active semi" data-tab="clean">Clean Dataset</button>
+                    <button class="tab-button disabled" data-tab="eda">Exploratory Data Analysis</button>
+                    <button class="tab-button disabled" data-tab="rfm">RFM and Clustering</button>
+                    <button class="tab-button semi" data-tab="predictive">Predictive Behavior Modeling</button>
+                    <button class="tab-button disabled" data-tab="forecast">Time Series Forecasting</button>
+                    <button class="tab-button semi" data-tab="recommend">Recommendation System</button>
+                </div>
+            </div>
+            <div class="content-container">
+                <div class="tab-content active custom" id="clean">
+                    <div class="container">
+                        <div id="results" class="results-section">
+                            <div id="placeholder-data">Process a csv file to show data</div>
+                            <div id="dataDisplay"></div>
+                            <div id="paginationSection" class="pagination-section" style="display: none;">
+                                <div class="pagination-controls">
+                                    <button id="firstPageBtn" class="pagination-btn">First</button>
+                                    <button id="prevPageBtn" class="pagination-btn">Previous</button>
+                                    <span id="pageInfo" class="page-info">Page 1 of 1</span>
+                                    <button id="nextPageBtn" class="pagination-btn">Next</button>
+                                    <button id="lastPageBtn" class="pagination-btn">Last</button>
+                                </div>
+                                <div class="goto-page">
+                                    <input type="number" id="pageNumberInput" class="page-input" min="1"
+                                        placeholder="Page">
+                                    <button id="goToPageBtn" class="pagination-btn">Go</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content custom" id="eda">
+                    <div class="container custom">
+                        <div class="eda-container">
+                            <div class="graphs-container">
+                                <h2>Graph</h2>
+                                <div class="dropdown-container">
+                                    <button class="dropdown-button" id="plot-selector" onclick="toggleDropdown()">
+                                        <span class="selected-text">Select a visualization</span>
+                                        <span class="arrow">▼</span>
+                                    </button>
+                                    <div class="dropdown-content" id="dropdownContent">
+                                    </div>
+                                </div>
+                                <div class="placeholder-content">
+                                    <span class="content-label">Visualizations</span>
+                                    <div id="eda-plots"></div>
+                                </div>
+                            </div>
+                            <div class="description-container">
+                                <h2>Description</h2>
+                                <div class="description-content">
+                                    <div id="graph-description">
+                                        <p id="description">Select a visualization to see its description here.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content custom" id="rfm">
+                    <div class="container">
+                        <h2>RFM and Clustering</h2>
+                        <div class="placeholder-content">
+                            <p>RFM and Clustering content will be displayed here</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content custom" id="predictive">
+                    <div class="container mx-auto p-4 flex justify-between gap-4">
+                        <div class="placeholder-content flex-1 flex flex-col justify-start"
+                            style="background-color: #fff; border: none;">
+                            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg w-full border border-gray-200">
+                                <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                                    Select user behavior events
+                                </h1>
+
+                                <div id="selected-events-container"
+                                    class="relative flex flex-wrap items-center gap-2 p-3 bg-gray-100 border border-gray-300 rounded-lg mb-6 min-h-[4rem] overflow-hidden group">
+                                    <span id="no-events-message" class="text-gray-500 italic">No events selected</span>
+                                    <button id="clear-all-button"
+                                        class="absolute bottom-2 right-2 p-1 text-gray-600 hover:text-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-full bg-white bg-opacity-80 group-hover:opacity-100 opacity-0 group-hover:scale-100 scale-90 hidden"
+                                        aria-label="Clear all events">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
+                                                d="M6 18L18 6M6 6l12 12">
+                                            </path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="flex justify-between gap-2 mb-4">
+                                    <button id="view-page-button"
+                                        class="flex-1 px-2 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                        style="background-color: hsl(0.0, 70%, 60%);">
+                                        View Page
+                                    </button>
+                                    <button id="favorite-button"
+                                        class="flex-1 px-2 py-2 bg-pink-500 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-pink-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                                        style="background-color: hsl(90.0, 70%, 60%);">
+                                        Favorite
+                                    </button>
+                                    <button id="add-to-cart-button"
+                                        class="flex-1 px-2 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-emerald-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                                        style="background-color: hsl(210.0, 70%, 60%);">
+                                        Add To Cart
+                                    </button>
+                                    <button id="purchase-button"
+                                        class="flex-1 px-2 py-2 bg-rose-500 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-rose-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+                                        style="background-color: hsl(270.0, 70%, 60%);">
+                                        Purchase
+                                    </button>
+                                </div>
+
+                                <div class="flex justify-center">
+                                    <button id="predict-button"
+                                        class="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:from-purple-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+                                        Predict
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="placeholder-content flex-1" style="background-color: #fff; border: none;">
+                            <div id="pie_probability_chart"
+                                class="bg-white p-6 md:p-8 rounded-xl shadow-lg w-full border border-gray-200 h-full flex items-center justify-center">
+                                <div class="flex flex-col items-center">
+                                    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-left">
+                                        Probability of each action
+                                    </h1>
+                                    <!-- Canvas for the pie chart -->
+                                    <canvas id="pieChart" width="400" height="400"></canvas>
+                                    <!-- Legend for the pie chart -->
+                                    <div id="chartLegend" class="mt-8 text-left text-gray-700 w-full px-4">
+                                        <h2 class="text-xl font-semibold mb-4">Legend:</h2>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content custom" id="forecast">
+                    <div class="container">
+                        <h2>Time Series Forecasting</h2>
+                        <div class="forecast-container">
+                            <!-- Forecast Method Selection -->
+                            <div class="forecast-controls">
+                                <div class="forecast-section">
+                                    <h3>Select Forecasting Method</h3>
+
+                                    <div class="forecast-method" data-method="existing">
+                                        <div class="method-header">
+                                            <div class="method-radio"></div>
+                                            <div class="method-title">Use Existing Model</div>
+                                        </div>
+                                        <div class="method-description">
+                                            Use a pre-trained Prophet model to predict future behavior patterns without
+                                            updating the model with new data.
+                                        </div>
+                                        <div class="input-group" style="display: none;">
+                                            <label class="input-label">Hours to Predict (1-8760):</label>
+                                            <input type="number" id="existingHours" class="forecast-input" min="1"
+                                                max="8760" value="24" placeholder="24">
+                                        </div>
+                                    </div>
+
+                                    <div class="forecast-method" data-method="update">
+                                        <div class="method-header">
+                                            <div class="method-radio"></div>
+                                            <div class="method-title">Update Model & Predict</div>
+                                        </div>
+                                        <div class="method-description">
+                                            Update the existing Prophet model with your current dataset and then make
+                                            predictions. This provides more accurate results based on your latest data.
+                                        </div>
+                                        <div class="input-group" style="display: none;">
+                                            <label class="input-label">Hours to Predict (1-8760):</label>
+                                            <input type="number" id="updateHours" class="forecast-input" min="1"
+                                                max="8760" value="168" placeholder="168">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button id="startForecast" class="forecast-button" disabled>
+                                    Start Forecasting
+                                </button>
+                            </div>
+
+                            <!-- Results Section -->
+                            <div id="forecastResults" class="forecast-results">
+                                <div class="results-header">
+                                    <h3 class="results-title">Forecasting Results</h3>
+                                </div>
+
+                                <div class="results-meta">
+                                    <div class="meta-grid">
+                                        <div class="meta-item">
+                                            <span class="meta-label">Method Used:</span>
+                                            <span class="meta-value" id="methodUsed">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label">Hours Predicted:</span>
+                                            <span class="meta-value" id="hoursPredicted">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label">Behavior Type:</span>
+                                            <span class="meta-value" id="behaviorType">-</span>
+                                        </div>
+                                        <div class="meta-item">
+                                            <span class="meta-label">Total Predictions:</span>
+                                            <span class="meta-value" id="totalPredictions">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="forecast-plots">
+                                    <div class="plot-container">
+                                        <div class="plot-title">Forecast Plot</div>
+                                        <img id="forecastPlot" class="forecast-plot" alt="Forecast Plot"
+                                            style="display: none;">
+                                    </div>
+
+                                    <div class="plot-container">
+                                        <div class="plot-title">Components Plot</div>
+                                        <img id="componentsPlot" class="forecast-plot" alt="Components Plot"
+                                            style="display: none;">
+                                    </div>
+                                </div>
+
+                                <div class="predictions-table-container">
+                                    <h4 style="color: #fff; margin-bottom: 16px;">Prediction Data</h4>
+                                    <table class="predictions-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date & Time</th>
+                                                <th>Predicted Value</th>
+                                                <th>Lower Bound</th>
+                                                <th>Upper Bound</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="predictionsTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content custom" id="recommend">
+                    <div class="container">
+                        <h2>Recommendation System</h2>
+                        <div class="placeholder-content" style="flex-direction: column; align-items: flex-start;">
+                            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                                <input id="recommend-user-id" type="text" placeholder="User ID" class="server-url-input"
+                                    style="width: 140px;">
+                                <input id="recommend-product-id" type="text" placeholder="Product ID"
+                                    class="server-url-input" style="width: 140px;">
+                                <button id="get-recommend-btn" class="process-button">Get Recommendations</button>
+                            </div>
+                            <div id="recommend-results" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for enlarged images -->
+    <div id="overlay" class="overlay"></div>
+
+    <script src="script.js"></script>
+    <script>
+        // Existing tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Always allow the click for "predictive" and "forecast" tabs
+                if (!button.classList.contains('disabled')) {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                }
+            });
+        });
+
+
+    </script>
+</body>
+
+</html>
